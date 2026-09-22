@@ -2,6 +2,22 @@
 
 A web-based Electric Vehicle (EV) Smart Navigation and Range Estimation prototype designed to combine route planning, EV charging-station discovery, battery-range estimation, and simulated driving information in a single application.
 
+## Screenshots
+
+### EV Smart Navigation Dashboard
+
+![EV Smart Navigation Dashboard](screenshots/dashboard.png)
+
+### Route Planning and Range Estimation
+
+![Route Planning](screenshots/route.png)
+
+
+### EV Charging Stations
+
+![Charging Stations](screenshots/charging-stations.png)
+
+
 ## Project Overview
 
 Electric vehicle range can vary depending on driving conditions, speed, vehicle load, auxiliary power consumption, and other real-world factors. This project explores an adaptive approach to EV range estimation while providing navigation and charging-station assistance.
