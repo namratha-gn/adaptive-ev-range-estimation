@@ -1,0 +1,1274 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>EV Smart Navigation</title>
+
+
+    <!-- =====================================================
+         LEAFLET
+    ====================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+
+    <!-- =====================================================
+         EXISTING PROJECT CSS
+    ====================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/style.css' %}"
+    >
+
+
+    <!-- =====================================================
+         SMALL ADDITIONAL STYLES
+    ====================================================== -->
+
+    <style>
+
+        /* Search suggestions */
+
+        .field {
+            position: relative;
+        }
+
+        .suggestions {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 100%;
+            z-index: 2000;
+
+            background: #ffffff;
+
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+
+            overflow: hidden;
+
+            box-shadow:
+                0 5px 15px rgba(0, 0, 0, 0.15);
+        }
+
+
+        .suggestion {
+            width: 100%;
+
+            border: none;
+
+            background: #ffffff;
+
+            padding: 10px 12px;
+
+            text-align: left;
+
+            cursor: pointer;
+
+            font-size: 13px;
+
+            color: #1f2937;
+        }
+
+
+        .suggestion:hover {
+            background: #f1f5f9;
+        }
+
+
+        .search-message {
+            padding: 10px 12px;
+
+            font-size: 13px;
+
+            color: #64748b;
+        }
+
+
+        /* =====================================================
+           VEHICLE CONTROLS
+        ====================================================== */
+
+        .vehicle-control-panel {
+
+            margin-top: 15px;
+
+            padding-top: 15px;
+
+            border-top: 1px solid #20344a;
+
+        }
+
+
+        .vehicle-control-title {
+
+            font-size: 13px;
+
+            font-weight: bold;
+
+            color: #8ea7bd;
+
+            margin-bottom: 10px;
+
+        }
+
+
+        .mode-buttons {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 6px;
+
+            margin-bottom: 12px;
+
+        }
+
+
+        .mode {
+
+            padding: 8px 5px;
+
+            border: 1px solid #334e68;
+
+            border-radius: 7px;
+
+            background: #182b3d;
+
+            color: #ffffff;
+
+            cursor: pointer;
+
+            font-size: 11px;
+
+            font-weight: bold;
+
+        }
+
+
+        .mode:hover {
+
+            background: #243b53;
+
+        }
+
+
+        .mode.active {
+
+            background: #2563eb;
+
+            border-color: #2563eb;
+
+        }
+
+
+        /* Accelerator */
+
+        .accelerator-container {
+
+            margin-top: 10px;
+
+        }
+
+
+        .accelerator-container label {
+
+            display: block;
+
+            font-size: 11px;
+
+            color: #8ea7bd;
+
+            margin-bottom: 5px;
+
+        }
+
+
+        #accelerator {
+
+            width: 100%;
+
+            cursor: pointer;
+
+        }
+
+
+        #accelerator:disabled {
+
+            opacity: 0.45;
+
+            cursor: not-allowed;
+
+        }
+
+
+        .accelerator-value {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            font-size: 11px;
+
+            color: #8ea7bd;
+
+            margin-top: 3px;
+
+        }
+
+
+        /* Drive buttons */
+
+        .drive-buttons {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 6px;
+
+            margin-top: 10px;
+
+        }
+
+
+        .drive-buttons button {
+
+            padding: 9px 5px;
+
+            border: 1px solid #334e68;
+
+            border-radius: 7px;
+
+            background: #182b3d;
+
+            color: white;
+
+            cursor: pointer;
+
+            font-size: 11px;
+
+            font-weight: bold;
+
+        }
+
+
+        .drive-buttons button:hover {
+
+            background: #243b53;
+
+        }
+
+
+        .drive-buttons button.active {
+
+            background: #16a34a;
+
+            border-color: #16a34a;
+
+        }
+
+
+        .drive-buttons button:disabled {
+
+            opacity: 0.45;
+
+            cursor: not-allowed;
+
+        }
+
+
+        #brakePedal {
+
+            background: #991b1b;
+
+            border-color: #dc2626;
+
+        }
+
+
+        #brakePedal.pressed {
+
+            background: #dc2626;
+
+        }
+
+
+        /* Start / stop */
+
+        .ride-buttons {
+
+            display: grid;
+
+            grid-template-columns:
+                1fr 1fr;
+
+            gap: 6px;
+
+            margin-top: 8px;
+
+        }
+
+
+        .ride-buttons button {
+
+            padding: 8px;
+
+            border: none;
+
+            border-radius: 7px;
+
+            cursor: pointer;
+
+            font-weight: bold;
+
+        }
+
+
+        #startRide {
+
+            background: #16a34a;
+
+            color: white;
+
+        }
+
+
+        #stopRide {
+
+            background: #dc2626;
+
+            color: white;
+
+        }
+
+
+        /* Station cards */
+
+        .station-card {
+
+            padding: 10px;
+
+            margin-bottom: 8px;
+
+            border: 1px solid #20344a;
+
+            border-radius: 8px;
+
+            background: #111f2f;
+
+            cursor: pointer;
+
+        }
+
+
+        .station-card:hover {
+
+            border-color: #2563eb;
+
+        }
+
+
+        .station-name {
+
+            font-weight: bold;
+
+            font-size: 13px;
+
+        }
+
+
+        .station-address {
+
+            margin-top: 4px;
+
+            font-size: 11px;
+
+            color: #8ea7bd;
+
+        }
+
+
+        .station-distance {
+
+            margin-top: 5px;
+
+            font-size: 11px;
+
+            color: #43e97b;
+
+        }
+
+
+        /* Map */
+
+        #map {
+
+            width: 100%;
+
+            height: 100%;
+
+            min-height: 500px;
+
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+        ====================================================== */
+
+        @media (max-width: 1100px) {
+
+            .content {
+
+                grid-template-columns:
+                    320px
+                    1fr;
+
+            }
+
+            .right-panel {
+
+                grid-column:
+                    1 / -1;
+
+                height: 300px;
+
+            }
+
+        }
+
+
+        @media (max-width: 750px) {
+
+            .content {
+
+                grid-template-columns:
+                    1fr;
+
+            }
+
+            #map {
+
+                min-height: 500px;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="app">
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <header class="header">
+
+        <div class="logo">
+
+            EV
+            <span>
+                Smart Navigation
+            </span>
+
+        </div>
+
+
+        <div
+            class="status"
+            id="gpsStatus"
+        >
+            GPS: Waiting
+        </div>
+
+    </header>
+
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
+    <main class="content">
+
+
+        <!-- =================================================
+             LEFT PANEL
+        ================================================== -->
+
+        <section class="panel">
+
+
+            <div class="panel-title">
+
+                Route Planning
+
+            </div>
+
+
+            <div class="panel-body">
+
+
+                <!-- =================================================
+                     STARTING LOCATION
+                ================================================== -->
+
+                <div class="field">
+
+                    <label>
+                        Starting Location
+                    </label>
+
+
+                    <input
+                        id="startInput"
+                        type="text"
+                        placeholder="Type starting location..."
+                        autocomplete="off"
+                    >
+
+
+                    <div
+                        id="startSuggestions"
+                        class="suggestions"
+                    ></div>
+
+                </div>
+
+
+
+                <!-- =================================================
+                     DESTINATION
+                ================================================== -->
+
+                <div class="field">
+
+                    <label>
+                        Destination
+                    </label>
+
+
+                    <input
+                        id="destinationInput"
+                        type="text"
+                        placeholder="Type destination..."
+                        autocomplete="off"
+                    >
+
+
+                    <div
+                        id="destinationSuggestions"
+                        class="suggestions"
+                    ></div>
+
+                </div>
+
+
+
+                <!-- =================================================
+                     LOCATION BUTTONS
+                ================================================== -->
+
+                <div class="button-row">
+
+
+                    <button
+                        id="useCurrentButton"
+                        type="button"
+                    >
+                        📍 Use Current
+                    </button>
+
+
+                    <button
+                        id="nearbyButton"
+                        type="button"
+                    >
+                        ⚡ Nearby Charging
+                    </button>
+
+
+                </div>
+
+
+
+                <!-- =================================================
+                     NAVIGATE
+                ================================================== -->
+
+                <button
+                    id="navigateButton"
+                    type="button"
+                >
+                    🧭 Calculate Route
+                </button>
+
+
+
+                <!-- =================================================
+                     ROUTE SUMMARY
+                ================================================== -->
+
+                <div class="trip-stats">
+
+
+                    <div>
+
+                        <small>
+                            DISTANCE
+                        </small>
+
+                        <strong id="distance">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <small>
+                            TIME
+                        </small>
+
+                        <strong id="travelTime">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- =================================================
+                     PREDICTION
+                ================================================== -->
+
+                <div class="trip-stats">
+
+
+                    <div>
+
+                        <small>
+                            CHARGE CONSUMED
+                        </small>
+
+                        <strong id="consumption">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <small>
+                            FINAL CHARGE
+                        </small>
+
+                        <strong id="destinationBattery">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- =================================================
+                     ROUTE CONDITIONS
+                ================================================== -->
+
+                <div class="route-info">
+
+
+                    <div>
+
+                        <small>
+                            TRAFFIC
+                        </small>
+
+                        <strong id="traffic">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <small>
+                            ELEVATION
+                        </small>
+
+                        <strong id="elevation">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <small>
+                            ROAD
+                        </small>
+
+                        <strong id="roadType">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <small>
+                            RANGE
+                        </small>
+
+                        <strong id="range">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <small>
+                            REACHABILITY
+                        </small>
+
+                        <strong id="reachability">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- =================================================
+                     VEHICLE CONTROL
+                ================================================== -->
+
+                <div class="vehicle-control-panel">
+
+
+                    <div class="vehicle-control-title">
+
+                        DRIVING MODE
+
+                    </div>
+
+
+                    <!-- ECO / NORMAL / SPORT -->
+
+                    <div class="mode-buttons">
+
+
+                        <button
+                            type="button"
+                            class="mode active"
+                            data-mode="Eco"
+                            id="ecoMode"
+                        >
+                            🌱 ECO
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="mode"
+                            data-mode="Normal"
+                            id="normalMode"
+                        >
+                            🚗 NORMAL
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="mode"
+                            data-mode="Sport"
+                            id="sportMode"
+                        >
+                            ⚡ SPORT
+                        </button>
+
+
+                    </div>
+
+
+
+                    <!-- CURRENT MODE -->
+
+                    <div class="accelerator-value">
+
+                        <span>
+                            MODE
+                        </span>
+
+
+                        <strong id="selectedMode">
+                            ECO
+                        </strong>
+
+                    </div>
+
+
+
+                    <!-- =================================================
+                         ACCELERATOR
+                    ================================================== -->
+
+                    <div class="accelerator-container">
+
+
+                        <label for="accelerator">
+
+                            ACCELERATOR
+
+                        </label>
+
+
+                        <input
+                            type="range"
+                            id="accelerator"
+                            min="0"
+                            max="100"
+                            value="0"
+                            step="1"
+                            disabled
+                        >
+
+
+                        <div class="accelerator-value">
+
+
+                            <span>
+                                0%
+                            </span>
+
+
+                            <strong>
+
+                                <span id="acceleratorSpeed">
+                                    0
+                                </span>
+
+                                km/h
+
+                            </strong>
+
+
+                        </div>
+
+
+                    </div>
+
+
+
+                    <!-- =================================================
+                         RUN / DRIVE / PARK
+                    ================================================== -->
+
+                    <div class="drive-buttons">
+
+
+                        <button
+                            id="runButton"
+                            type="button"
+                        >
+                            ▶ RUN
+                        </button>
+
+
+                        <button
+                            id="drivingMode"
+                            type="button"
+                        >
+                            🚗 DRIVE
+                        </button>
+
+
+                        <button
+                            id="parkingMode"
+                            type="button"
+                            class="active"
+                        >
+                            🅿 PARK
+                        </button>
+
+
+                    </div>
+
+
+
+                    <!-- =================================================
+                         BRAKE
+                    ================================================== -->
+
+                    <div class="drive-buttons">
+
+
+                        <button
+                            id="brakePedal"
+                            type="button"
+                        >
+                            🛑 BRAKE
+                        </button>
+
+
+                    </div>
+
+
+
+                    <!-- =================================================
+                         START / STOP RIDE
+                    ================================================== -->
+
+                    <div class="ride-buttons">
+
+
+                        <button
+                            id="startRide"
+                            type="button"
+                        >
+                            🚗 START RIDE
+                        </button>
+
+
+                        <button
+                            id="stopRide"
+                            type="button"
+                            disabled
+                        >
+                            🛑 STOP RIDE
+                        </button>
+
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- =================================================
+                     VEHICLE STATUS
+                ================================================== -->
+
+                <div class="vehicle-info">
+
+
+                    <div>
+
+                        <small>
+                            SPEED
+                        </small>
+
+
+                        <strong>
+
+                            <span id="speed">
+                                0
+                            </span>
+
+                            km/h
+
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <small>
+                            BATTERY
+                        </small>
+
+
+                        <strong>
+
+                            <span id="battery">
+                                85
+                            </span>%
+
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <small>
+                            STATUS
+                        </small>
+
+
+                        <strong id="driveStatus">
+                            PARKED
+                        </strong>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- =================================================
+                     BATTERY BAR
+                ================================================== -->
+
+                <div class="battery-container">
+
+
+                    <div
+                        class="battery-bar"
+                        id="batteryBar"
+                        style="width:85%;"
+                    ></div>
+
+
+                </div>
+
+
+
+                <!-- =================================================
+                     ODOMETER / TRIP
+                ================================================== -->
+
+                <div class="vehicle-info">
+
+
+                    <div>
+
+                        <small>
+                            ODOMETER
+                        </small>
+
+
+                        <strong>
+
+                            <span id="odometer">
+                                0.00
+                            </span>
+
+                            km
+
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <small>
+                            TRIP
+                        </small>
+
+
+                        <strong>
+
+                            <span id="tripDistance">
+                                0.00
+                            </span>
+
+                            km
+
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <small>
+                            GPS
+                        </small>
+
+
+                        <strong id="locationStatus">
+                            SEARCHING
+                        </strong>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- =================================================
+                     ROUTE DEVIATION
+                ================================================== -->
+
+                <div class="deviation">
+
+
+                    <strong>
+                        Route Deviation
+                    </strong>
+
+
+                    <span id="deviationValue">
+                        No charging station selected.
+                    </span>
+
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             MAP
+        ================================================== -->
+
+        <section class="panel map-panel">
+
+
+            <div class="map-control">
+
+
+                <button
+                    id="mapLocationButton"
+                    type="button"
+                >
+                    📍 My Location
+                </button>
+
+
+                <button
+                    id="mapChargingButton"
+                    type="button"
+                >
+                    ⚡ Stations
+                </button>
+
+
+            </div>
+
+
+            <div id="map"></div>
+
+
+        </section>
+
+
+
+        <!-- =================================================
+             CHARGING STATIONS
+        ================================================== -->
+
+        <section class="panel right-panel">
+
+
+            <div class="panel-title">
+
+                Charging Stations
+
+            </div>
+
+
+            <div class="panel-body">
+
+
+                <div
+                    id="stationStatus"
+                    style="
+                        font-size:12px;
+                        color:#8ea7bd;
+                        margin-bottom:10px;
+                    "
+                >
+
+                    Search nearby stations
+                    or calculate a route.
+
+                </div>
+
+
+                <div
+                    id="stationList"
+                    class="station-list"
+                ></div>
+
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+</div>
+
+
+
+<!-- =====================================================
+     LEAFLET JS
+====================================================== -->
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+
+
+<!-- =====================================================
+     NAVIGATION JS
+     
+     IMPORTANT:
+     All GPS + map + route + charging +
+     drive controls should be inside this file.
+====================================================== -->
+
+<script
+    src="{% static 'js/navigation.js' %}">
+</script>
+
+
+</body>
+
+</html>
